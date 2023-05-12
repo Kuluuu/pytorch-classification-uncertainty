@@ -4,6 +4,7 @@ import copy
 import time
 from helpers import get_device, one_hot_embedding
 from losses import relu_evidence
+import logging
 
 
 def train_model(
@@ -18,6 +19,13 @@ def train_model(
     device=None,
     use_uncertainty=False,
 ):
+    timestamp = "{}".format(str(time.strftime("%Y-%m-%d-%H-%M-%S",time.localtime())))
+    postfix = timestamp + '_' + str(num_epochs) + 'epoch'
+    log_save_dir = "./log/" + postfix + ".log"
+    logging.basicConfig(level=logging.INFO,
+                    filename=log_save_dir,
+                    filemode='w',
+                    format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
 
     since = time.time()
 
@@ -34,14 +42,18 @@ def train_model(
     for epoch in range(num_epochs):
         print("Epoch {}/{}".format(epoch, num_epochs - 1))
         print("-" * 10)
+        logging.info("Epoch {}/{}".format(epoch, num_epochs - 1))
+        logging.info("-" * 10)
 
         # Each epoch has a training and validation phase
         for phase in ["train", "val"]:
             if phase == "train":
                 print("Training...")
+                logging.info("Training...")
                 model.train()  # Set model to training mode
             else:
                 print("Validating...")
+                logging.info("Validating...")
                 model.eval()  # Set model to evaluate mode
 
             running_acc_loss = 0.0
@@ -122,6 +134,9 @@ def train_model(
                     phase.capitalize(), epoch_acc_loss, epoch_uncertainty_loss, epoch_acc
                 )
             )
+            logging.info("{} acc_loss: {:.4f} acc_loss: {:.4f} acc: {:.4f}".format(
+                    phase.capitalize(), epoch_acc_loss, epoch_uncertainty_loss, epoch_acc
+                ))
 
             # deep copy the model
             if phase == "val" and epoch_acc > best_acc:
